@@ -1,6 +1,6 @@
 CC = g++
-LIBDIR = ../../../../lib
-CFLAGS = -I $(LIBDIR) -I . -lpthread -lboost_math_tr1 -g3 -O2 -std=gnu++17 -Wall -Wextra \
+LIBDIR = /usr/local/lib
+CFLAGS = -L$(LIBDIR) -lpthread -lboost_math_tr1 -g3 -O2 -std=gnu++17 -Wall -Wextra \
 	-Wmissing-declarations -Wpointer-arith -Wcast-qual -Wundef -Wwrite-strings \
 	-Wformat -Wformat-security -fstack-protector -fPIE -D_FORTIFY_SOURCE=2 \
 	-Wunreachable-code -Wsign-compare -Wno-endif-labels

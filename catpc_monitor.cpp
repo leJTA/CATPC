@@ -1,8 +1,8 @@
 #include "catpc_monitor.hpp"
 #include "catpc_utils.hpp"
 
-#include "pqos.h"
-#include "monitoring.h"
+#include <pqos.h>
+//#include <monitoring.h>
 
 #include <vector>
 #include <memory>
@@ -25,7 +25,7 @@ const struct pqos_capability *l3_cap = NULL;
 static enum pqos_mon_event sel_events = (enum pqos_mon_event)0;			// Monitored PQOS events
 static unsigned sel_process_num = 0;												// Maintains the number of process id's we want to track
 
-static std::unordered_map<std::string, struct pqos_mon_data*> m_mon_grps; 
+static std::unordered_map<std::string, struct pqos_mon_data*> m_mon_grps;
 
 int init_monitoring()
 {
@@ -107,12 +107,10 @@ int poll_monitoring_data(std::unordered_map<std::string, catpc_application*>& ap
 			return -1 * ret;
 		}
 
-		for (i = 0; i < sel_process_num; ++i) {
-			element.second->values.llc = m_mon_grps[element.first]->values.llc;
-			element.second->values.ipc = m_mon_grps[element.first]->values.ipc;
-			element.second->values.llc_misses = m_mon_grps[element.first]->values.llc_misses_delta;
-			element.second->values.llc_references = m_mon_grps[element.first]->intl->values.llc_references_delta; 
-		}
+		pqos_mon_get_value(m_mon_grps[element.first], PQOS_MON_EVENT_L3_OCCUP, &element.second->values.llc, NULL);
+		pqos_mon_get_value(m_mon_grps[element.first], PQOS_PERF_EVENT_LLC_MISS, NULL, &element.second->values.llc_misses);
+		pqos_mon_get_value(m_mon_grps[element.first], PQOS_PERF_EVENT_LLC_REF, NULL, &element.second->values.llc_references);
+		pqos_mon_get_ipc(m_mon_grps[element.first], &element.second->values.ipc);
 	}
 
 	return 0;

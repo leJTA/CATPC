@@ -5,7 +5,7 @@
 #include <vector>
 #include <functional>
 #include <bitset>
-#include "pqos.h"
+#include <pqos.h>
 
 #include <boost/math/statistics/linear_regression.hpp>
 
