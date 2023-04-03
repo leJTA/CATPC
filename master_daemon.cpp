@@ -253,8 +253,8 @@ void connection_handler(connection_t* conn)
 					bytes_read = recv(conn->sock, &ptr->CLOS_id, sizeof(unsigned int), 0);
 
 					//log_fprint(log_file, "[DEBUG] : MRC[%s][%fKB] = %f\n", 
-					//	ptr->cmdline.c_str(), ptr->values.llc / 1024.0, 
-					//	(double)ptr->values.llc_misses / ptr->values.llc_references);
+					//ptr->cmdline.c_str(), ptr->values.llc / 1024.0, 
+					//(double)ptr->values.llc_misses / ptr->values.llc_references);
 				}
 				// Notify the loop processing thread
 				{

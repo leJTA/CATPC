@@ -153,7 +153,7 @@ int perform_smart_allocation(catpc_application* application_ptr, std::vector<llc
 	for (unsigned i = 0; i < llcs.size(); ++i) {
 		ret = pqos_l3ca_get(i, PQOS_MAX_L3CA_COS, &num, tab);	// num = clos_count
 
-		llcs[i].clos_list[num - 1].mask = (0x7ff ^ llcs[i].clos_list[selected_CLOS_id].mask) | 0x400;
+		llcs[i].clos_list[num - 1].mask = (0x7ff ^ llcs[i].clos_list[selected_CLOS_id].mask) | 0x001;
 		tab[num - 1].u.ways_mask = llcs[i].clos_list[num - 1].mask;
 		
 		ret = pqos_l3ca_set(i, num, tab);
