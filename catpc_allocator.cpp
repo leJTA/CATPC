@@ -8,13 +8,16 @@
 #include <pqos.h>
 
 #include <boost/math/statistics/linear_regression.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+using namespace boost::accumulators;
 
 #define MAX_NUM_WAYS 11
 
 std::vector<double> way_occupancy_ratios;
 std::vector<std::vector<std::reference_wrapper<double>>> CLOS_occupency_ratios;
 
-std::vector<llc_ca> get_allocation_config() 
+std::vector<llc_ca> get_allocation_config()
 {
 	int ret;
 	unsigned l3cat_id_count, *l3cat_ids = NULL;
@@ -81,6 +84,33 @@ int perform_allocation(catpc_application* application_ptr)
 		}
 	}
 	return 0;
+}
+
+void remove_outliers(std::map<uint64_t, double>& mrc, const std::vector<llc_ca>& llcs)
+{
+	unsigned num_ways = llcs[0].num_ways;
+	unsigned way_size = llcs.size() * llcs[0].way_size;
+	std::vector<std::vector<double>> Xs(num_ways);
+	std::vector<std::vector<double>> Ys(num_ways);
+	double med = 0.0;
+
+	for (unsigned i = 0; i < num_ways; ++i) {
+		accumulator_set<double, stats<tag::median>> acc;
+		for (const auto& [k, v] : mrc) {
+			if ( (k >= i * way_size) && (k < ( (i + 1) * way_size)) ) {
+				Xs[i].push_back(k);
+				Ys[i].push_back(v);
+				acc(v);
+			}
+		}
+
+		med = boost::accumulators::median(acc);
+		for (unsigned j = 0; j < Xs.size(); ++j) {
+			if ( (Ys[i][j] < med - 0.05) || (Ys[i][j] > med + 0.05) ) {
+				mrc.erase(Xs[i][j]);
+			}
+		}
+	}
 }
 
 uint64_t get_required_llc(const std::map<uint64_t, double>& mrc, const std::vector<llc_ca>& llcs)

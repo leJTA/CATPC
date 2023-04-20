@@ -37,6 +37,14 @@ std::vector<llc_ca> get_allocation_config();
 int perform_allocation(catpc_application* application_ptr);
 
 /**
+ * @brief Remove outliers from the mrc
+ * 
+ * @param [in,out] mrc miss ratio curve 
+ * @param [in] llcs vector of llc
+ */
+void remove_outliers(std::map<uint64_t, double>& mrc, const std::vector<llc_ca>& llcs);
+
+/**
  * @brief Process and return the required amount of llc
  * 
  * @param [in] mrc miss rate curve of the application

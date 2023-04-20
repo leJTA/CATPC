@@ -98,7 +98,7 @@ int start_monitoring(const std::string& cmdline)
 
 int poll_monitoring_data(std::unordered_map<std::string, catpc_application*>& applications)
 {
-	unsigned i, ret = PQOS_RETVAL_OK;
+	unsigned ret = PQOS_RETVAL_OK;
 	for (std::pair<std::string, catpc_application*> element : applications) {
 		ret = pqos_mon_poll(&m_mon_grps[element.first], 1);
 
