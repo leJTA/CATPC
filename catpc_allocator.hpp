@@ -39,10 +39,12 @@ int perform_allocation(catpc_application* application_ptr);
 /**
  * @brief Remove outliers from the mrc
  * 
- * @param [in,out] mrc miss ratio curve 
+ * @param [in] mrc miss ratio curve 
  * @param [in] llcs vector of llc
+ * 
+ * @return smoothed miss rate curve
  */
-void remove_outliers(std::map<uint64_t, double>& mrc, const std::vector<llc_ca>& llcs);
+std::map<uint64_t, double> remove_outliers(const std::map<uint64_t, double>& mrc, const std::vector<llc_ca>& llcs);
 
 /**
  * @brief Process and return the required amount of llc
