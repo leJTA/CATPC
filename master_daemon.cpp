@@ -390,7 +390,7 @@ void processing_loop()
 		// Print on file
 		for (const std::pair<std::string, std::map<uint64_t, double>>& entry : mrc) {
 			std::ofstream ofs{"/tmp/" + entry.first.substr(entry.first.rfind('/') + 1) + ".csv", std::ios::trunc};
-			for (const auto& e : entry.second) {
+			for (const auto& e : remove_outliers(entry.second, sock_to_llcs.begin()->second)) {
 				ofs << (e.first / 1024.0) << ", " << e.second << "\n";
 			}
 			ofs.close();
