@@ -328,6 +328,7 @@ void connection_handler(connection_t* conn)
 void processing_loop()
 {
 	std::unordered_map<std::string, std::map<uint64_t, double>> mrc;
+	std::unordered_map<std::string, std::map<uint64_t, double>> llc_to_ipc;
 	
 	while (!terminate) {
 		// Wait for the signal of each worker thread
@@ -345,6 +346,7 @@ void processing_loop()
 				// If the CLOS_id done is less than the last CLOS_id, continue MRC evaluation to the next CLOS
 				if (!app_ptr->eval_done) {
 					mrc[app_ptr->cmdline][app_ptr->values.llc] = (double)app_ptr->values.llc_misses / app_ptr->values.llc_references;
+					llc_to_ipc[app_ptr->cmdline][app_ptr->values.llc] = app_ptr->values.ipc;
 					log_fprint(log_file, "DEBUG: MRC[%.1fKB] = %.3f\n", app_ptr->values.llc / 1024.0, (double)app_ptr->values.llc_misses / app_ptr->values.llc_references);
 					if (app_ptr->CLOS_id < sock_to_llcs[conn->sock][0].clos_count - 1) {
 						// Go to the next CLOS
@@ -390,15 +392,17 @@ void processing_loop()
 		// Print on file
 		for (const std::pair<std::string, std::map<uint64_t, double>>& entry : mrc) {
 			std::ofstream ofs{"/tmp/" + entry.first.substr(entry.first.rfind('/') + 1) + ".csv", std::ios::trunc};
+			std::ofstream ofs_ipc{"/tmp/" + entry.first.substr(entry.first.rfind('/') + 1) + ".ipc.csv", std::ios::trunc};
 			for (const auto& e : remove_outliers(entry.second, sock_to_llcs.begin()->second)) {
 				ofs << (e.first / 1024.0) << ", " << e.second << "\n";
+				ofs_ipc << (e.first / 1024.0) << ", " << llc_to_ipc[entry.first][e.first] << "\n";
 			}
 			ofs.close();
 		}
 	}
 }
 
-void termination_handler(int signum) 
+void termination_handler(int signum)
 {
 	if (signum == SIGTERM) {
 		terminate = 1;
