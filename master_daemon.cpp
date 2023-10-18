@@ -23,7 +23,7 @@
 #include "catpc_monitor.hpp"
 #include "catpc_allocator.hpp"
 
-#define MAX_CLIENTS 16			// Maximum number of slaves managed by CATPC master
+#define MAX_CLIENTS 32			// Maximum number of slaves managed by CATPC master
 #define SERVER_PORT 10000
 
 void connection_handler(connection_t*);
