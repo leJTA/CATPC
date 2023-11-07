@@ -56,6 +56,15 @@ std::map<uint64_t, double> remove_outliers(const std::map<uint64_t, double>& mrc
 uint64_t get_required_llc(const std::map<uint64_t, double>& mrc, const std::vector<llc_ca>& llcs);
 
 /**
+ * @brief Process and return the required amount of llc
+ * 
+ * @param [in] mrc ipc = f(llc) curve of the application
+ * @param [in] llcs vector of llc info
+ * @return the required llc
+ */
+uint64_t get_required_llc_using_ipc(const std::map<uint64_t, double>& llc_to_ipc, const std::vector<llc_ca>& llcs);
+
+/**
  * @brief 
  * 
  * @param [in] application application to which smart cache allocation is to be performed.

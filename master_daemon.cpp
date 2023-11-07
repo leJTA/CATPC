@@ -374,7 +374,11 @@ void processing_loop()
 				for (const auto& entry : sock_to_application[conn->sock]) {
 					catpc_application* app_ptr = entry.second;
 					if (!app_ptr->smart_alloc_done) {
-						app_ptr->required_llc = get_required_llc(remove_outliers(mrc[app_ptr->cmdline], sock_to_llcs[conn->sock]), sock_to_llcs[conn->sock]);
+						// app_ptr->required_llc = get_required_llc(remove_outliers(mrc[app_ptr->cmdline], sock_to_llcs[conn->sock]), sock_to_llcs[conn->sock]);
+						app_ptr->required_llc = get_required_llc_using_ipc(
+							remove_outliers(llc_to_ipc[app_ptr->cmdline], sock_to_llcs[conn->sock]), 
+							sock_to_llcs[conn->sock]
+						);
 						app_ptr->smart_alloc_done = true;
 						log_fprint(log_file, "INFO: required llc of %s is %.1fKB\n", entry.first.c_str(), app_ptr->required_llc / 1024.0);
 					}

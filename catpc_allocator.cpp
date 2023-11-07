@@ -141,6 +141,31 @@ uint64_t get_required_llc(const std::map<uint64_t, double>& mrc, const std::vect
 	return x[0];
 }
 
+uint64_t get_required_llc_using_ipc(const std::map<uint64_t, double>& llc_to_ipc, const std::vector<llc_ca>& llcs)
+{
+	std::vector<double> x{};
+	std::vector<double> y{};
+
+	unsigned llc_size = llcs.size() * llcs[0].num_ways * llcs[0].way_size;	// size of last level cache
+
+	for (const auto& [k, v] : llc_to_ipc) {
+		x.push_back(k);
+		y.push_back(v);
+	}
+
+	while (x.size() > 1) {
+		auto [c, slope] = boost::math::statistics::simple_ordinary_least_squares(x, y);
+		if (slope * llc_size < 0.05) {
+			return x[0];
+		}
+
+		x.erase(x.begin());
+		y.erase(y.begin());
+	}
+
+	return x[0];
+}
+
 int perform_smart_allocation(catpc_application* application_ptr, std::vector<llc_ca>& llcs)
 {
 	int num_llcs = llcs.size();
