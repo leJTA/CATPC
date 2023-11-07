@@ -347,7 +347,7 @@ void processing_loop()
 				if (!app_ptr->eval_done) {
 					mrc[app_ptr->cmdline][app_ptr->values.llc] = (double)app_ptr->values.llc_misses / app_ptr->values.llc_references;
 					llc_to_ipc[app_ptr->cmdline][app_ptr->values.llc] = app_ptr->values.ipc;
-					log_fprint(log_file, "DEBUG: MRC[%.1fKB] = %.3f\n", app_ptr->values.llc / 1024.0, (double)app_ptr->values.llc_misses / app_ptr->values.llc_references);
+					log_fprint(log_file, "DEBUG: IPC[%.1fKB] = %.3f\n", app_ptr->values.llc / 1024.0, (double)app_ptr->values.ipc);
 					if (app_ptr->CLOS_id < sock_to_llcs[conn->sock][0].clos_count - 1) {
 						// Go to the next CLOS
 						app_ptr->CLOS_id++;
