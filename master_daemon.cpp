@@ -393,15 +393,22 @@ void processing_loop()
 			}
 		}
 
-		// Print on file
+		// Print MRC
 		for (const std::pair<std::string, std::map<uint64_t, double>>& entry : mrc) {
 			std::ofstream ofs{"/tmp/" + entry.first.substr(entry.first.rfind('/') + 1) + ".csv", std::ios::trunc};
-			std::ofstream ofs_ipc{"/tmp/" + entry.first.substr(entry.first.rfind('/') + 1) + ".ipc.csv", std::ios::trunc};
 			for (const auto& e : remove_outliers(entry.second, sock_to_llcs.begin()->second)) {
 				ofs << (e.first / 1024.0) << ", " << e.second << "\n";
-				ofs_ipc << (e.first / 1024.0) << ", " << llc_to_ipc[entry.first][e.first] << "\n";
 			}
 			ofs.close();
+		}
+
+		// print IPC = f(LLC)
+		for (const std::pair<std::string, std::map<uint64_t, double>>& entry : llc_to_ipc) {
+			std::ofstream ofs_ipc{"/tmp/" + entry.first.substr(entry.first.rfind('/') + 1) + ".ipc.csv", std::ios::trunc};
+			for (const auto& e : remove_outliers(entry.second, sock_to_llcs.begin()->second)) {
+				ofs_ipc << (e.first / 1024.0) << ", " << e.second << "\n";
+			}
+			ofs_ipc.close();
 		}
 	}
 }
