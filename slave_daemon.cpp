@@ -1,17 +1,16 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <time.h>
-#include <errno.h>
-#include <vector>
-
-#include "catpc_utils.hpp"
-#include "catpc_monitor.hpp"
 #include "catpc_allocator.hpp"
+#include "catpc_monitor.hpp"
+#include "catpc_utils.hpp"
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+#include <vector>
 
 #define SERVER_PORT 10000
 
@@ -19,10 +18,10 @@ FILE* log_file = NULL;
 std::unordered_map<std::string, catpc_application*> applications;
 
 /*
-* =======================================
-* Main
-* =======================================
-*/
+ * =======================================
+ * Main
+ * =======================================
+ */
 int main(int argc, char** argv)
 {
 	pid_t pid = fork();
@@ -32,7 +31,7 @@ int main(int argc, char** argv)
 		printf("Usage : %s [master-name]\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
-	
+
 	master_name = argv[1];
 
 	if (pid < 0) {
@@ -46,17 +45,15 @@ int main(int argc, char** argv)
 	}
 
 	/*
-	* =======================================
-	* Daemon Code
-	* =======================================
-	*/
+	 * =======================================
+	 * Daemon Code
+	 * =======================================
+	 */
 	umask(0);
 
 	pid_t sid = 0;
-	sid = setsid();	// set new session
-	if(sid < 0) {
-		exit(EXIT_FAILURE);
-	}
+	sid = setsid(); // set new session
+	if (sid < 0) { exit(EXIT_FAILURE); }
 
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
@@ -75,9 +72,7 @@ int main(int argc, char** argv)
 	char buf[512];
 
 	log_file = fopen("/var/log/catpc.slave.log", "w");
-	if (log_file == NULL) {
-		exit(EXIT_FAILURE);
-	}
+	if (log_file == NULL) { exit(EXIT_FAILURE); }
 
 	// Start Monitoring
 	ret = init_monitoring();
@@ -103,9 +98,10 @@ int main(int argc, char** argv)
 	server_addr.sin_family = AF_INET;
 	memcpy((char*)&server_addr.sin_addr, host_info->h_addr_list[0], host_info->h_length);
 	server_addr.sin_port = htons(SERVER_PORT);
-	
+
 	if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-		log_fprint(log_file, "ERROR: connection to %s failed: %s (%d)\n", inet_ntoa(server_addr.sin_addr), strerror(errno), errno);
+		log_fprint(log_file, "ERROR: connection to %s failed: %s (%d)\n",
+					  inet_ntoa(server_addr.sin_addr), strerror(errno), errno);
 		exit(EXIT_FAILURE);
 	}
 
@@ -114,7 +110,7 @@ int main(int argc, char** argv)
 		switch (msg) {
 		case CATPC_GET_MONITORING_VALUES:
 			log_fprint(log_file, "INFO: message received: CATPC_GET_MONITORING_VALUES\n");
-			
+
 			// poll monitoring values
 			ret = poll_monitoring_data(applications);
 			if (ret < 0) {
@@ -124,37 +120,47 @@ int main(int argc, char** argv)
 
 			// send values tab
 			sz = applications.size();
-			bytes_sent = send(sock, &sz, sizeof(size_t), 0);													// send the number of applications
+			bytes_sent = send(sock, &sz, sizeof(size_t),
+									0); // send the number of applications
 			for (std::pair<std::string, catpc_application*> element : applications) {
 				catpc_application* app_ptr = element.second;
-				sz = app_ptr->cmdline.size();																				
-				bytes_sent = send(sock, &sz, sizeof(size_t), 0);												// send the length of the cmdline string
-				bytes_sent = send(sock, app_ptr->cmdline.c_str(), sz * sizeof(char), 0);					// send the cmdline string
-				bytes_sent = send(sock, &app_ptr->values, sizeof(catpc_monitoring_values), 0);		// send monitoring values
-				bytes_sent = send(sock, &app_ptr->CLOS_id, sizeof(unsigned int), 0);					// send CLOS id
+				sz = app_ptr->cmdline.size();
+				
+				// send the length of the cmdline string
+				bytes_sent = send(sock, &sz, sizeof(size_t), 0); 
+				
+				// send the cmdline string
+				bytes_sent = send(sock, app_ptr->cmdline.c_str(), sz * sizeof(char), 0); 
+				
+				// send monitoring values
+				bytes_sent = send(sock, &app_ptr->values, sizeof(catpc_monitoring_values), 0); 
+				
+				// send CLOS id
+				bytes_sent = send(sock, &app_ptr->CLOS_id, sizeof(unsigned int), 0); 
 			}
 
 			break;
 		case CATPC_ADD_APP_TO_MONITOR:
 			log_fprint(log_file, "INFO: message received: CATPC_ADD_APP_TO_MONITOR\n");
-			
+
 			// receive cmd line string
 			bytes_read = recv(sock, &sz, sizeof(size_t), 0);
 			bytes_read = recv(sock, buf, sz * sizeof(char), 0);
 			cmdline.assign(buf, sz);
 
-
 			// add application to the map
-			applications.try_emplace(cmdline, new catpc_application(cmdline, catpc_monitoring_values(), 0));
+			applications.try_emplace(cmdline,
+											 new catpc_application(cmdline, catpc_monitoring_values(), 0));
 
 			// start monitoring on app launched by the command line
 			set_logfile(log_file);
 			ret = start_monitoring(cmdline);
 			if (ret < 0) {
-				log_fprint(log_file, "ERROR: unable to start monitoring on app \"%s(%d)\"\n", cmdline.c_str(), ret);
+				log_fprint(log_file, "ERROR: unable to start monitoring on app \"%s(%d)\"\n",
+							  cmdline.c_str(), ret);
 				exit(EXIT_FAILURE);
 			}
-			
+
 			log_fprint(log_file, "INFO: app added : %s\n", cmdline.c_str());
 			break;
 
@@ -168,7 +174,7 @@ int main(int argc, char** argv)
 
 			// add application to the map
 			remove_application(applications, llcs, cmdline);
-			
+
 			log_fprint(log_file, "INFO: app removed : %s\n", cmdline.c_str());
 			break;
 
@@ -181,9 +187,7 @@ int main(int argc, char** argv)
 				bytes_sent = send(sock, &llc.num_ways, sizeof(unsigned), 0);
 				bytes_sent = send(sock, &llc.way_size, sizeof(unsigned), 0);
 				bytes_sent = send(sock, &llc.clos_count, sizeof(unsigned), 0);
-				for (CLOS clos : llc.clos_list) {
-					bytes_sent = send(sock, &clos, sizeof(CLOS), 0);
-				}
+				for (CLOS clos : llc.clos_list) { bytes_sent = send(sock, &clos, sizeof(CLOS), 0); }
 			}
 			break;
 		case CATPC_PERFORM_ALLOCATION:
@@ -194,8 +198,9 @@ int main(int argc, char** argv)
 				bytes_read = recv(sock, buf, sz * sizeof(char), 0);
 				bytes_read = recv(sock, &CLOS_id, sizeof(unsigned int), 0);
 				bytes_read = recv(sock, &required_llc, sizeof(uint64_t), 0);
-				log_fprint(log_file, "INFO: %s: COS%u -> COS%u\n", cmdline.c_str(), applications[cmdline]->CLOS_id, CLOS_id);
-				
+				log_fprint(log_file, "INFO: %s: COS%u -> COS%u\n", cmdline.c_str(),
+							  applications[cmdline]->CLOS_id, CLOS_id);
+
 				cmdline.assign(buf, sz);
 				applications[cmdline]->CLOS_id = CLOS_id;
 				applications[cmdline]->required_llc = required_llc;
@@ -211,7 +216,8 @@ int main(int argc, char** argv)
 							log_fprint(log_file, "ERROR: perform_smart_allocation failed (%d)\n", ret);
 						}
 						app_ptr->smart_alloc_done = true;
-						log_fprint(log_file, "DEBUG: smart allocation done for %s : COS%d\n", app_ptr->cmdline.c_str(), app_ptr->CLOS_id);
+						log_fprint(log_file, "DEBUG: smart allocation done for %s : COS%d\n",
+									  app_ptr->cmdline.c_str(), app_ptr->CLOS_id);
 					}
 				}
 				else {
@@ -238,16 +244,16 @@ int main(int argc, char** argv)
 	if (bytes_read == 0) {
 		log_fprint(log_file, "INFO: recv: server closed.\n");
 	}
-	else {	// bytes_read < 0
+	else { // bytes_read < 0
 		log_fprint(log_file, "ERROR: recv: %s (%d)\n", strerror(errno), errno);
 	}
 
 exit:
 	// stop monitoring before exit
 	stop_monitoring(applications);
-	
+
 	log_fprint(log_file, "INFO: Done.\n");
-	
+
 	// cleaning up everything
 	close(sock);
 	fclose(log_file);

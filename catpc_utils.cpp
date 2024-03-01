@@ -1,11 +1,10 @@
 #include "catpc_utils.hpp"
-
-#include <dirent.h>
-#include <stdarg.h>
-#include <time.h>
-#include <errno.h>
 #include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
+#include <time.h>
 
 int get_pids_by_cmdline(pid_t* pids, const char* cmdline)
 {
@@ -14,34 +13,29 @@ int get_pids_by_cmdline(pid_t* pids, const char* cmdline)
 	char c = '\0';
 	int i = 0, sz = 0;
 	pid_t pid;
-	FILE* fp = popen("/bin/ps -A -o pid=", "r");	// list of all pids
+	FILE* fp = popen("/bin/ps -A -o pid=", "r"); // list of all pids
 	FILE* cmdfile = NULL;
-	
-	if (fp == NULL) {
-		return -1;
-	}
+
+	if (fp == NULL) { return -1; }
 
 	while (fscanf(fp, "%d", &pid) != EOF) {
 		sprintf(filepath, "/proc/%d/cmdline", pid);
 		cmdfile = fopen(filepath, "r");
-		
-		if (cmdfile == NULL)
-			continue;
+
+		if (cmdfile == NULL) continue;
 
 		// read command of the process
 		i = 0;
-		while ( fscanf(cmdfile, "%c", &c) != EOF) {
+		while (fscanf(cmdfile, "%c", &c) != EOF) {
 			if (c == '\0') {
 				continue;
-				//c = ' ';	
+				// c = ' ';
 			}
 			buf[i++] = c;
 		}
 		buf[i] = '\0';
 
-		if (strcmp(buf, cmdline) == 0) {
-			pids[sz++] = pid;
-		}
+		if (strcmp(buf, cmdline) == 0) { pids[sz++] = pid; }
 		fclose(cmdfile);
 	}
 
@@ -56,11 +50,11 @@ void log_fprint(FILE* fp, const char* fmt, ...)
 	time_t timestamp;
 	struct tm* now;
 	char buff[70];
-	
+
 	time(&timestamp);
-	now  = localtime(&timestamp);
+	now = localtime(&timestamp);
 	strftime(buff, sizeof buff, "%F %H:%M:%S", now);
-	
+
 	fprintf(fp, "[%s] ", buff);
 	va_start(args, fmt);
 	vfprintf(fp, fmt, args);
@@ -70,8 +64,6 @@ void log_fprint(FILE* fp, const char* fmt, ...)
 
 std::ostream& operator<<(std::ostream& os, const std::map<uint64_t, double>& m)
 {
-	for (auto& entry : m) {
-		os << entry.first << ", " << entry.second << "\n";
-	}
+	for (auto& entry: m) { os << entry.first << ", " << entry.second << "\n"; }
 	return os;
 }
